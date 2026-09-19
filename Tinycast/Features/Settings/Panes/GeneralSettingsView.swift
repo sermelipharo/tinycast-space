@@ -9,6 +9,8 @@ struct GeneralSettingsView: View {
     @AppStorage(SettingsKey.showInMenuBar) private var showInMenuBar = true
     @State private var confirmingRankingReset = false
     @State private var inputSources: [InputSourceSwitcher.Option] = []
+    /// tinycast-space: show ✦ for the Hyper chord while another app does the remapping.
+    @AppStorage("spaceHyperGlyphWithoutRemap") private var hyperGlyphWithoutRemap = false
 
     /// The Hyper modifier chord as prose glyphs, tracking the Include Shift toggle.
     private var hyperGlyphs: String { settings.hyperKeyIncludesShift ? "⌃⌥⇧⌘" : "⌃⌥⌘" }
@@ -140,11 +142,18 @@ struct GeneralSettingsView: View {
                     }
                 }
 
+                if settings.hyperKey == .none {
+                    Toggle(isOn: $hyperGlyphWithoutRemap) {
+                        SettingsRowTitle(.generalHyperKey, "Show ✦ for another app's Hyper key")
+                        Text("Shortcuts using the whole Hyper chord read as ✦ instead of its modifiers.")
+                    }
+                }
+
                 Toggle(isOn: $settings.hyperKeyIncludesShift) {
                     SettingsRowTitle(.generalHyperKey, "Include Shift (⇧)")
                 }
                 // Flipping it re-points recorded chords, so it needs a chord to mean.
-                .settingsEnabled(settings.hyperKey != .none)
+                .settingsEnabled(settings.hyperKey != .none || hyperGlyphWithoutRemap)
             } header: {
                 SettingsSectionHeader(.generalHyperKey)
             }

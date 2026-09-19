@@ -188,7 +188,7 @@ struct RootPaletteView: View {
                     title: "Changelog",
                     systemImage: "clock.arrow.trianglehead.2.counterclockwise.rotate.90"
                 ) {
-                    if let url = URL(string: "https://github.com/abue-ammar/tinycast/releases") {
+                    if let url = URL(string: "https://github.com/sermelipharo/tinycast-space/releases") {
                         openURL(url)
                     }
                 },
@@ -541,6 +541,42 @@ struct RootPaletteView: View {
                     if settings.escapeKeyBehavior == .closeAndPopToRoot {
                         core.paletteCoordinator.popToRootNow()
                     }
+                }
+                return .handled
+            }
+            // tinycast-space: typing a user alias exactly and pressing Space opens its entry, the
+            // way Raycast does. A row with inline arguments gets its first field focused; anything
+            // else runs, so further typing lands in the command's own search field. Apps and
+            // settings panes keep searching, since "tg something" is more often a query.
+            .onKeyPress(.space, phases: .down) { press in
+                guard vm.mode == .launcher, searchFocused, argumentFocused == nil, !menuOpen,
+                    !vm.isComposing, !vm.isControlListOpen, !isCollapsed,
+                    press.modifiers.subtracting(.capsLock).isEmpty,
+                    !vm.query.isEmpty
+                else { return .ignored }
+                // "\ " escapes the Space: the backslash becomes a plain space and the query searches on.
+                if vm.query.hasSuffix("\\") {
+                    vm.query.removeLast()
+                    vm.query += " "
+                    return .handled
+                }
+                // Case-sensitive on purpose: "cc" opens its command, "CC" (Shift) just searches.
+                guard let key = core.aliases.aliases.first(where: { $0.value == vm.query })?.key,
+                    let launcher = screen as? LauncherScreen,
+                    let index = launcher.rows.firstIndex(where: {
+                        if case .entry(let app) = $0 { return app.preferenceKey == key }
+                        return false
+                    }),
+                    case .entry(let app) = launcher.rows[index],
+                    app.kind != .application, app.kind != .systemSettings
+                else { return .ignored }
+                vm.selection = index
+                scroll = ScrollIntent(kind: .follow)
+                if let field = headerAccessory?.fieldNames.first {
+                    argumentFocused = field
+                    searchFocused = false
+                } else {
+                    launcher.activate(at: index)
                 }
                 return .handled
             }
@@ -1034,6 +1070,7 @@ struct RootPaletteView: View {
         vm.menuQuery = ""
         // Stated here rather than mirrored later: the window delegate reads it during this turn.
         vm.menuOpen = false
+        InlineEntryEditor.shared.end(stoppingRecordingIn: core)  // tinycast-space
     }
 
     private func menuQueryChanged() {
@@ -1232,6 +1269,8 @@ struct RootPaletteView: View {
     private func activateMenuItem(_ index: Int) {
         guard let content = menuContent, (0..<content.rowCount).contains(index) else { return }
         guard content.isSelectable(index) else { return }
+        // tinycast-space: a row that edits in place keeps its menu up. See InlineEntryEditor.
+        if content.keepsOpen(index) { return content.activate(index) }
         // Before the action: one opening a window must find the palette key again, or nothing hides it.
         closeMenus()
         // A mouse click on a row takes the caret with it; menus close back into the field.
