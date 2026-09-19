@@ -1,3 +1,5 @@
+> **tinycast-space** is an automatically synced fork of [abue-ammar/tinycast](https://github.com/abue-ammar/tinycast) that adds **alias + Space**: type a command's alias and press Space to open it, or to jump into its first argument, the way Raycast does. Every upstream commit is rebuilt here with the patch on top, and every upstream stable release is re-released here; the in-app updater of this build is tied to [this fork's releases](https://github.com/sermelipharo/tinycast-space/releases). The patch lives in [`.space/`](.space/).
+
 # Tinycast
 
 **A tiny, fully native macOS launcher. One hotkey, everything you reach for all day, under 100 MB of

@@ -502,6 +502,36 @@ struct RootPaletteView: View {
                 }
                 return .handled
             }
+            // tinycast-space: typing a user alias exactly and pressing Space opens its entry, the
+            // way Raycast does. A row with inline arguments gets its first field focused; anything
+            // else runs, so further typing lands in the command's own search field. Apps and
+            // settings panes keep searching, since "tg something" is more often a query.
+            .onKeyPress(.space, phases: .down) { press in
+                guard vm.mode == .launcher, searchFocused, argumentFocused == nil, !menuOpen,
+                    !vm.isComposing, !vm.isControlListOpen, !isCollapsed,
+                    press.modifiers.subtracting(.capsLock).isEmpty,
+                    !vm.query.isEmpty,
+                    let key = core.aliases.aliases.first(where: {
+                        $0.value.lowercased() == vm.query.lowercased()
+                    })?.key,
+                    let launcher = screen as? LauncherScreen,
+                    let index = launcher.rows.firstIndex(where: {
+                        if case .entry(let app) = $0 { return app.preferenceKey == key }
+                        return false
+                    }),
+                    case .entry(let app) = launcher.rows[index],
+                    app.kind != .application, app.kind != .systemSettings
+                else { return .ignored }
+                vm.selection = index
+                scroll = ScrollIntent(kind: .follow)
+                if let field = headerAccessory?.fieldNames.first {
+                    argumentFocused = field
+                    searchFocused = false
+                } else {
+                    launcher.activate(at: index)
+                }
+                return .handled
+            }
             .onKeyPress(keys: [.tab], phases: .down) { press in
                 // ⇥ inside an open list belongs to the list, not to the form's field order.
                 if vm.isControlListOpen { return .handled }
