@@ -80,7 +80,7 @@ struct ExtensionActionsPanel: View {
                 verticalOffset: -metrics.spacing.xxs / 2)
         }
         .frame(width: panel.width)
-        .glassEffect(.regular, in: shape)
+        .glassEffect(SpaceTheme.tinted(.regular), in: shape)  // tinycast-space
     }
 
     @ViewBuilder
