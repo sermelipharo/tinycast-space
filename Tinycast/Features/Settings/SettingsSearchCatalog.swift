@@ -141,6 +141,15 @@ enum SettingsSearchCatalog {
             .generalAppearance, "Appearance",
             keywords: ["dark", "light", "mode", "theme"]),
         .init(
+            .generalAppearance, "Light theme",
+            keywords: ["raycast theme", "ray.so", "colors", "palette", "import"]),
+        .init(
+            .generalAppearance, "Dark theme",
+            keywords: ["raycast theme", "ray.so", "colors", "palette", "import"]),
+        .init(
+            .generalAppearance, "Theme background",
+            keywords: ["opacity", "transparency", "raycast theme"]),
+        .init(
             .generalAppearance, "Interface size",
             keywords: ["text size", "font size", "scale", "zoom", "bigger", "larger", "legible"]),
         .init(
